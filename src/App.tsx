@@ -40,14 +40,14 @@ const pictureModules = import.meta.glob(
 ) as Record<string, string>;
 
 const pictureDimensions: Record<string, { width: number; height: number }> = {
-  "482242610_2000747133752439_6881298387076109_n.jpg": { width: 1548, height: 2048 },
-  "483528132_2002020566958429_5578150164988324061_n.jpg": { width: 2048, height: 1366 },
-  "14.06 HansMedia_KalaKalaEDM (133).jpg": { width: 4000, height: 2667 },
-  "ChatGPT Image Sep 17, 2026, 04_25_38 PM.png": { width: 1024, height: 1536 },
-  "IMG_0286.JPG": { width: 4016, height: 6016 },
-  "IMG_0289.JPG": { width: 4016, height: 6016 },
-  "IMG_0290.JPG": { width: 4016, height: 6016 },
-  "IMG_5501.JPG": { width: 2048, height: 1364 },
+  "482242610_2000747133752439_6881298387076109_n.jpg": { width: 1209, height: 1600 },
+  "483528132_2002020566958429_5578150164988324061_n.jpg": { width: 1600, height: 1067 },
+  "14.06 HansMedia_KalaKalaEDM (133).jpg": { width: 1600, height: 1067 },
+  "ChatGPT Image Sep 17, 2026, 04_25_38 PM.png": { width: 1066, height: 1600 },
+  "IMG_0286.JPG": { width: 1068, height: 1600 },
+  "IMG_0289.JPG": { width: 1068, height: 1600 },
+  "IMG_0290.JPG": { width: 1068, height: 1600 },
+  "IMG_5501.JPG": { width: 1600, height: 1065 },
 };
 
 const pictureCards = Object.entries(pictureModules)
@@ -59,7 +59,9 @@ const pictureCards = Object.entries(pictureModules)
   })
   .map(([path, src], index) => {
     const fileName = path.split("/").pop() ?? `Picture ${index + 1}`;
-    const title = fileName.replace(/\.[^.]+$/, "").trim() || `Picture ${index + 1}`;
+    const title = fileName.startsWith("IMG_028") || fileName.startsWith("IMG_029")
+      ? "MinhNhat — Artist Portrait"
+      : `MinhNhat — The Vault ${index + 1}`;
     return { id: `${index}-${title}`, src, title, ...pictureDimensions[fileName] };
   });
 
@@ -174,6 +176,7 @@ const FADE_OUT_LEAD = 0.55;
 
 function FadingVideo({ src, className, style }: { src: string; className?: string; style?: CSSProperties }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const nearViewport = useInView(videoRef, { once: true, margin: "300px" });
   const rafRef = useRef<number | null>(null);
   const fadingOutRef = useRef(false);
 
@@ -250,8 +253,8 @@ function FadingVideo({ src, className, style }: { src: string; className?: strin
       autoPlay
       muted
       playsInline
-      preload="auto"
-      src={src}
+      preload="metadata"
+      src={nearViewport ? src : undefined}
       style={{ opacity: 0, ...style }}
       className={className}
     />
@@ -262,12 +265,12 @@ function FadingVideo({ src, className, style }: { src: string; className?: strin
 /* BlurText — word-by-word blur-in                                    */
 /* ------------------------------------------------------------------ */
 function BlurText({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) {
-  const ref = useRef<HTMLParagraphElement>(null);
+  const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { amount: 0.1 });
   const words = text.split(" ");
 
   return (
-    <p
+    <span
       ref={ref}
       className={className ?? ""}
       style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", rowGap: "0.1em" }}
@@ -284,10 +287,10 @@ function BlurText({ text, className, delay = 0 }: { text: string; className?: st
           transition={{ duration: 0.7, times: [0, 0.5, 1], ease: "easeOut", delay: delay + (i * 100) / 1000 }}
           style={{ display: "inline-block", marginRight: "0.28em" }}
         >
-          {word}
+          {word}{i < words.length - 1 ? " " : ""}
         </motion.span>
       ))}
-    </p>
+    </span>
   );
 }
 
@@ -312,7 +315,7 @@ function FadeIn({ children, className, delay = 0 }: { children: ReactNode; class
 function Navbar() {
   return (
     <nav className="fixed top-4 left-0 right-0 z-50 flex items-center justify-between px-8 lg:px-16">
-      <a href="#home" className="liquid-glass flex h-12 w-12 items-center justify-center rounded-full">
+      <a href="#home" aria-label="MinhNhat home" className="liquid-glass flex h-12 w-12 items-center justify-center rounded-full">
         <span className="font-heading italic lowercase text-white">m</span>
       </a>
 
@@ -341,14 +344,14 @@ function Navbar() {
 /* ------------------------------------------------------------------ */
 function Hero() {
   return (
-    <section id="home" className="relative h-screen w-full overflow-hidden bg-black">
+    <section id="home" className="relative min-h-screen w-full overflow-hidden bg-black">
       <FadingVideo
         src={heroVideo}
         className="absolute left-1/2 top-0 z-0 -translate-x-1/2 object-cover object-top"
         style={{ width: "120%", height: "120%" }}
       />
 
-      <div className="relative z-10 flex h-full flex-col px-8 lg:px-16">
+      <div className="relative z-10 flex min-h-screen flex-col px-4 sm:px-8 lg:px-16">
         <Navbar />
 
         <div className="flex flex-1 flex-col items-center justify-center pt-24 px-4 text-center">
@@ -364,10 +367,11 @@ function Hero() {
 
           <h1 className="mt-8">
             <BlurText
-              text="Venture Past Your Sky Across the Soundscape"
-              className="text-6xl md:text-7xl lg:text-[5.5rem] font-heading italic text-white leading-[0.8] max-w-2xl tracking-[-4px]"
+              text="MinhNhat - DJ/ Producer"
+              className="text-5xl md:text-7xl lg:text-[5.5rem] font-heading italic text-white leading-[1] max-w-2xl tracking-[-2px]"
             />
           </h1>
+          <p className="mt-4 max-w-2xl text-lg font-heading italic text-white/80">Venture Past Your Sky Across the Soundscape</p>
 
           <motion.p
             initial={{ filter: "blur(10px)", opacity: 0, y: 20 }}
@@ -375,9 +379,9 @@ function Hero() {
             transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
             className="mt-4 text-sm md:text-base text-white max-w-2xl font-body font-light leading-tight"
           >
-            MinhNhat is a DJ and producer riding genre fluid — techno, house and afro
-            grooves woven into sets that feel like synths floating through deep space.
-            Secure, extraordinary, and made to be felt.
+            DJ MinhNhat is a music producer in Vietnam, exploring techno, house and afro
+            grooves through live DJ sets and remixes. Listen to the music or get in touch
+            for DJ bookings and music collaborations.
           </motion.p>
 
           <motion.div
@@ -390,7 +394,7 @@ function Hero() {
               href="#sound"
               className="liquid-glass-strong flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white"
             >
-              Drop Into the Sound
+              Listen to DJ Sets & Remixes
               <ArrowUpRight className="h-5 w-5" />
             </a>
           </motion.div>
@@ -453,6 +457,11 @@ function Sound() {
             <br />
             <span className="text-white/70">The catalogue.</span>
           </h2>
+          <p className="mt-6 max-w-2xl text-white/80 leading-relaxed">
+            Explore DJ MinhNhat’s live sets, SoundCloud remixes and beat videos,
+            alongside a selected Spotify playlist. For MinhNhat trap enquiries or
+            remix collaborations, <a href="#booking" className="underline underline-offset-4">get in touch</a>.
+          </p>
         </FadeIn>
 
         {/* Latest set */}
@@ -475,6 +484,7 @@ function Sound() {
                 loading="lazy"
               />
             </div>
+            <a href="https://www.youtube.com/watch?v=HeQkaLU3HEw" target="_blank" rel="noreferrer" className="mt-4 inline-block text-sm underline underline-offset-4">Watch MinhNhat’s DJ set on YouTube</a>
           </div>
         </FadeIn>
 
@@ -542,6 +552,7 @@ function Sound() {
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
                   allowFullScreen
+                  loading="lazy"
                 />
               </div>
             ))}
@@ -558,8 +569,8 @@ function Sound() {
 const CAPABILITIES = [
   {
     icon: <Lightbulb className="h-6 w-6 text-white" />,
-    title: "Smart Stage",
-    body: "Automatic lighting and material adjustment. Full-fidelity energy with real crowd reaction — engineered live from the booth to the floor.",
+    title: "DJ Sets & Music Production",
+    body: "DJ sets, remixes and beat production. Explore MinhNhat’s music and get in touch with your event details or a creative brief for a collaboration.",
   },
 ];
 
@@ -633,7 +644,7 @@ function VaultGallery() {
               className="picture-card picture-masonry-item group"
             >
               <div className="picture-frame">
-                <img src={picture.src} alt={picture.title} width={picture.width} height={picture.height} className="w-full h-auto block" loading="lazy" />
+                <img src={picture.src} alt={picture.title} width={picture.width} height={picture.height} className="w-full h-auto block" loading="lazy" decoding="async" />
               </div>
               <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
                 <div className="glass-caption inline-flex items-center gap-3 rounded-full px-4 py-2 max-w-full">
@@ -659,8 +670,13 @@ function Booking() {
         <FadeIn className="space-y-8">
           <div className="text-center space-y-4">
             <p className="mb-4 text-sm font-body text-white/80">// Booking</p>
-            <h2 className="font-heading italic text-4xl md:text-6xl text-white">Work With Me</h2>
+            <h2 className="font-heading italic text-4xl md:text-6xl text-white">DJ Booking in Da Nang</h2>
             <p className="text-white/70 tracking-[0.2em] uppercase text-xs">Direct booking and contact</p>
+            <p className="mx-auto max-w-2xl text-white/80 leading-relaxed">
+              Looking for a DJ in Da Nang? Contact DJ and producer MinhNhat with your
+              event date, venue and preferred music style to discuss availability.
+              For music production or remix collaborations in Vietnam, share your creative brief.
+            </p>
           </div>
 
           <div className="liquid-glass rounded-[32px] p-6 md:p-10 overflow-hidden relative">
@@ -729,7 +745,7 @@ function Booking() {
 function Footer() {
   return (
     <footer className="relative z-10 flex flex-col md:flex-row items-center justify-between px-6 md:px-16 py-12 border-t border-white/10 text-[10px] uppercase tracking-[0.3em] text-white/50">
-      <div>© 2024 DJMINHNHAT.ART — THE NOCTURNAL CURATOR.</div>
+      <div>© {new Date().getFullYear()} MINHNHAT — DJ/ PRODUCER.</div>
       <div className="flex gap-8 mt-6 md:mt-0">
         <a href="#home" className="hover:text-white transition-colors">Home</a>
         <a href="#sound" className="hover:text-white transition-colors">Sound</a>
