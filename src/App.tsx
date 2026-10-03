@@ -14,7 +14,6 @@ import {
   Clapperboard,
   Facebook,
   Instagram,
-  Lightbulb,
   Mail,
   Music,
   Phone,
@@ -469,14 +468,14 @@ function Sound() {
           <div className="liquid-glass rounded-[1.25rem] p-4 md:p-6">
             <div className="mb-4 flex items-center gap-3">
               <Youtube className="h-5 w-5 text-white" />
-              <h3 className="font-heading italic text-2xl text-white">Mới nhất — Latest Set</h3>
+              <h3 className="font-heading italic text-2xl text-white">live set at summer 2026</h3>
             </div>
             <div className="liquid-glass rounded-xl p-1 overflow-hidden aspect-video">
               <iframe
                 width="100%"
                 height="100%"
                 src="https://www.youtube.com/embed/HeQkaLU3HEw"
-                title="MinhNhat latest set"
+                title="MinhNhat live set at summer 2026"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
@@ -566,14 +565,6 @@ function Sound() {
 /* ------------------------------------------------------------------ */
 /* Section 3 — Capabilities ("What I Do")                              */
 /* ------------------------------------------------------------------ */
-const CAPABILITIES = [
-  {
-    icon: <Lightbulb className="h-6 w-6 text-white" />,
-    title: "DJ Sets & Music Production",
-    body: "DJ sets, remixes and beat production. Explore MinhNhat’s music and get in touch with your event details or a creative brief for a collaboration.",
-  },
-];
-
 function Capabilities() {
   return (
     <section id="craft" className="relative min-h-screen w-full overflow-hidden bg-black">
@@ -593,23 +584,6 @@ function Capabilities() {
           </h2>
         </FadeIn>
 
-        <div className="mt-16 grid grid-cols-1 gap-6 md:max-w-md">
-          {CAPABILITIES.map((cap, i) => (
-            <FadeIn key={cap.title} delay={i * 0.1}>
-              <div className="liquid-glass flex min-h-[360px] flex-col rounded-[1.25rem] p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="liquid-glass flex h-11 w-11 items-center justify-center rounded-[0.75rem]">{cap.icon}</div>
-
-                </div>
-                <div className="flex-1" />
-                <div className="mt-6">
-                  <h3 className="font-heading italic text-white text-3xl md:text-4xl tracking-[-1px] leading-none">{cap.title}</h3>
-                  <p className="mt-3 text-sm text-white/90 font-body font-light leading-snug max-w-[32ch]">{cap.body}</p>
-                </div>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
       </div>
     </section>
   );
