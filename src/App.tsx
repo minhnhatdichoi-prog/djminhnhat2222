@@ -719,7 +719,10 @@ function Booking() {
 function Footer() {
   return (
     <footer className="relative z-10 flex flex-col md:flex-row items-center justify-between px-6 md:px-16 py-12 border-t border-white/10 text-[10px] uppercase tracking-[0.3em] text-white/50">
-      <div>© 2024 DJMINHNHAT.ART  - GOOD MUSIC MAKE US HAPPY.</div>
+      <div>
+        <div>© 2024 DJMINHNHAT.ART  - GOOD MUSIC MAKE US HAPPY.</div>
+        <div className="mt-2 text-[9px] normal-case tracking-[0.15em] text-white/40">supported by nathlxe</div>
+      </div>
       <div className="flex gap-8 mt-6 md:mt-0">
         <a href="#home" className="hover:text-white transition-colors">Home</a>
         <a href="#sound" className="hover:text-white transition-colors">Sound</a>
