@@ -1,44 +1,196 @@
 @import "tailwindcss";
 
 @theme {
-  --color-surface: #001525;
-  --color-on-surface: #cde5fe;
-  --color-on-surface-variant: #c3c7cd;
-  --color-surface-variant: rgba(31, 55, 74, 0.4);
-  --color-surface-container-low: #031d30;
-  --color-surface-container: #072134;
-  --color-surface-container-high: #142c3f;
-  
-  --color-primary: #c6c6c7;
-  --color-secondary: #b9c8de;
-  --color-accent: #b9c8de;
+  --color-surface: #000000;
+  --color-on-surface: #ffffff;
+  --color-on-surface-variant: rgba(255, 255, 255, 0.72);
 
-  --font-headline: "Instrument Serif", serif;
-  --font-body: "Inter", sans-serif;
+  --font-heading: "Instrument Serif", serif;
+  --font-body: "Barlow", sans-serif;
 }
 
 @layer utilities {
+  /* Subtle liquid glass — nav pills, chips, cards. */
   .liquid-glass {
-    background: linear-gradient(135deg, rgba(198, 198, 199, 0.2), rgba(185, 200, 222, 0.1));
-    backdrop-filter: blur(12px);
-    border: 0.5px solid rgba(226, 226, 226, 0.2);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 24px rgba(0, 0, 0, 0.2);
-    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: none;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
   }
 
-  .liquid-glass:hover {
-    backdrop-filter: blur(24px);
-    background: linear-gradient(135deg, rgba(198, 198, 199, 0.3), rgba(185, 200, 222, 0.15));
-    transform: scale(0.98);
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.15) 20%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0) 60%,
+      rgba(255, 255, 255, 0.15) 80%,
+      rgba(255, 255, 255, 0.45) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
-  .text-gradient {
-    background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  /* Stronger liquid glass — primary CTA. */
+  .liquid-glass-strong {
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(50px);
+    border: none;
+    box-shadow:
+      4px 4px 4px rgba(0, 0, 0, 0.05),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .liquid-glass-strong::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0) 60%,
+      rgba(255, 255, 255, 0.2) 80%,
+      rgba(255, 255, 255, 0.5) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-surface text-on-surface font-body selection:bg-surface-variant selection:text-white;
+  @apply bg-surface text-on-surface font-body antialiased;
+}
+
+/* ---- Reusable refined glass chrome (rounded buttons, icons, captions) ---- */
+.glass-button {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 14px 40px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.glass-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 18px 48px rgba(0, 0, 0, 0.36);
+}
+
+.glass-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: white;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.glass-caption {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* ---- Pinterest-style masonry gallery (live shots + profile pictures) ---- */
+.picture-card {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(5, 5, 5, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 18px 48px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  position: relative;
+  border-radius: 28px;
+}
+
+.picture-frame {
+  padding: 0.7rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent),
+    rgba(255, 255, 255, 0.02);
+}
+
+.picture-masonry {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: clamp(220px, 45vw, 360px);
+  gap: 1.25rem;
+}
+
+.picture-masonry-item {
+  min-width: 0;
+  height: 100%;
+}
+
+.picture-masonry-item:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.picture-masonry .picture-frame {
+  height: 100%;
+}
+
+.picture-masonry .picture-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (min-width: 768px) {
+  .picture-masonry {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-rows: clamp(260px, 32vw, 400px);
+  }
+
+  .picture-masonry-item,
+  .picture-masonry-item:last-child:nth-child(odd) {
+    grid-column: span 3;
+  }
+
+  .picture-masonry-item:nth-child(-n + 3) {
+    grid-column: span 4;
+  }
 }

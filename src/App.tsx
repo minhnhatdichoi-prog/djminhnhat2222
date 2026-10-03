@@ -1,247 +1,759 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * DJ MinhNhat — The Nocturnal Curator
+ * Cinematic one-pager that grew from a Hero + Capabilities base into a full
+ * profile site: live Hero, "What I Do" capabilities, the whole music catalogue
+ * (Spotify artist, SoundCloud remixes, YouTube beats), a photo gallery, and a
+ * booking / socials section — all surfaced through the liquid-glass design
+ * system, looping background video (custom rAF crossfade), and Framer Motion.
  */
 
-import { motion } from "motion/react";
-import { PlayCircle, ArrowUpRight } from "lucide-react";
+import { motion, useInView } from "motion/react";
+import { useEffect, useRef, type CSSProperties, type Key, type ReactElement, type ReactNode } from "react";
+import {
+  ArrowUpRight,
+  Clapperboard,
+  Facebook,
+  Instagram,
+  Lightbulb,
+  Mail,
+  Music,
+  Phone,
+  Youtube,
+} from "lucide-react";
 
-export default function App() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-      },
-    },
-  };
+/* ------------------------------------------------------------------ */
+/* Local assets                                                        */
+/* ------------------------------------------------------------------ */
+import heroVideo from "../Minhnhat - the profile/01.mp4";
+import capabilitiesVideo from "../Minhnhat - the profile/Video/ok 02.mp4";
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 1,
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-  };
+const pictureModules = import.meta.glob(
+  [
+    "../Minhnhat - the profile/MinhNhat Profile Picture/*.{png,PNG,jpg,JPG,jpeg,JPEG}",
+    "../Vault 2/*.{png,PNG,jpg,JPG,jpeg,JPEG}",
+    "!../Minhnhat - the profile/MinhNhat Profile Picture/._*",
+    "!../Minhnhat - the profile/MinhNhat Profile Picture/{IMG_0755.PNG,IMG_0776.PNG,DOO01946.png,01 .png,IMG_0724.PNG,IMG_5491.JPG}",
+    "!../Vault 2/._*",
+    "!../Vault 2/473189117_1957251571435329_8354319944244705017_n.jpg",
+  ],
+  { eager: true, import: "default" },
+) as Record<string, string>;
 
-  const navLinks = [
-    { name: "Home", href: "#", active: true },
-    { name: "Studio", href: "#" },
-    { name: "Music", href: "#music" },
-    { name: "About", href: "#" },
-    { name: "Reach Us", href: "#" },
-  ];
+const pictureDimensions: Record<string, { width: number; height: number }> = {
+  "482242610_2000747133752439_6881298387076109_n.jpg": { width: 1548, height: 2048 },
+  "483528132_2002020566958429_5578150164988324061_n.jpg": { width: 2048, height: 1366 },
+  "14.06 HansMedia_KalaKalaEDM (133).jpg": { width: 4000, height: 2667 },
+  "ChatGPT Image Sep 17, 2026, 04_25_38 PM.png": { width: 1024, height: 1536 },
+  "IMG_0286.JPG": { width: 4016, height: 6016 },
+  "IMG_0289.JPG": { width: 4016, height: 6016 },
+  "IMG_0290.JPG": { width: 4016, height: 6016 },
+  "IMG_5501.JPG": { width: 2048, height: 1364 },
+};
 
-  const scrollToMusic = () => {
-    const element = document.getElementById('music');
-    element?.scrollIntoView({ behavior: 'smooth' });
-  };
+const pictureCards = Object.entries(pictureModules)
+  .sort(([left], [right]) => left.localeCompare(right))
+  .filter(([path]) => {
+    const normalizedPath = path.toLowerCase();
+    const excluded = ["img_0755", "img_0776", "doo01946", "01 .png", "img_0724", "img_5491"];
+    return !excluded.some((raw) => normalizedPath.includes(raw));
+  })
+  .map(([path, src], index) => {
+    const fileName = path.split("/").pop() ?? `Picture ${index + 1}`;
+    const title = fileName.replace(/\.[^.]+$/, "").trim() || `Picture ${index + 1}`;
+    return { id: `${index}-${title}`, src, title, ...pictureDimensions[fileName] };
+  });
+
+/* ------------------------------------------------------------------ */
+/* Static data mirrored from the original site                         */
+/* ------------------------------------------------------------------ */
+const SOCIALS = [
+  { name: "Facebook", href: "https://fb.com/real.minhnhat2k" },
+  { name: "Instagram", href: "https://instagram.com/minhnhat.music" },
+  { name: "TikTok", href: "https://tiktok.com/@nhnlnc" },
+  { name: "Threads", href: "https://www.threads.com/@minhnhat.music" },
+];
+
+const NAV_LINKS = [
+  { label: "Home", href: "#home" },
+  { label: "Sound", href: "#sound" },
+  { label: "Craft", href: "#craft" },
+  { label: "The Vault", href: "#gallery" },
+  { label: "Booking", href: "#booking" },
+];
+
+const PARTNER_NAMES = ["Kala Kala", "Da Nang Electronic Carnival", "Hoiana", "+10 venues"];
+
+const REMIX_LINKS = [
+  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A1374846166&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2266532570&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A1606080858&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A1129528636&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A980746819&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A762154690&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A645735228&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+];
+
+const BEAT_LINKS = [
+  { src: "https://www.youtube.com/embed/vGC7OtcLop0?si=rZLdj7Dnr_8zkZXv", label: "Beat 01" },
+  { src: "https://www.youtube.com/embed/YKFh1Gzd4iA?si=A81gtILNWt8fyx1k", label: "Beat 02" },
+];
+
+/* ------------------------------------------------------------------ */
+/* Icons                                                               */
+/* ------------------------------------------------------------------ */
+function OutlineIcon({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <OutlineIcon className={className}>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </OutlineIcon>
+  );
+}
+
+function GlobeIcon({ className }: { className?: string }) {
+  return (
+    <OutlineIcon className={className}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </OutlineIcon>
+  );
+}
+
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M16.6 3A5.73 5.73 0 0 0 18 6.48 5.9 5.9 0 0 0 21 8.07v3.03a8.7 8.7 0 0 1-4.36-1.12v5.78a5.76 5.76 0 1 1-5.76-5.76c.36 0 .72.03 1.07.1v3.1a2.7 2.7 0 1 0 1.63 2.46V3h3.02Z" />
+    </svg>
+  );
+}
+
+function ThreadsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M15.35 10.17c-.2-.1-.4-.2-.61-.28-.04-.88-.3-1.58-.79-2.12-.56-.62-1.44-.93-2.62-.93-2.22 0-3.77 1.28-4.14 3.42l2.1.36c.19-1.1.9-1.7 2-1.7.63 0 1.1.15 1.39.46.18.2.3.47.35.83a11.2 11.2 0 0 0-2.43-.01c-2.36.2-3.87 1.62-3.87 3.61 0 2.06 1.58 3.49 3.83 3.49 1.62 0 2.84-.62 3.62-1.84.58-.9.89-2.05.94-3.42.36.19.66.43.87.72.34.45.48 1 .42 1.56-.15 1.34-1.4 2.7-4.15 2.7-2.93 0-4.82-1.94-4.82-4.93 0-3.14 2-5.17 5.1-5.17 1.55 0 2.81.44 3.75 1.3.46.42.82.93 1.08 1.52Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+const SOCIAL_ICONS: Record<string, (p: { className?: string }) => ReactElement> = {
+  Facebook: ({ className }) => <Facebook className={className} />,
+  Instagram: ({ className }) => <Instagram className={className} />,
+  TikTok: ({ className }) => <TikTokIcon className={className} />,
+  Threads: ({ className }) => <ThreadsIcon className={className} />,
+};
+
+/* ------------------------------------------------------------------ */
+/* FadingVideo — manual rAF crossfade, no CSS transitions, no `loop`   */
+/* ------------------------------------------------------------------ */
+const FADE_MS = 500;
+const FADE_OUT_LEAD = 0.55;
+
+function FadingVideo({ src, className, style }: { src: string; className?: string; style?: CSSProperties }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const fadingOutRef = useRef(false);
+
+  function fadeTo(target: number, duration: number) {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    const video = videoRef.current;
+    if (!video) return;
+    const start = performance.now();
+    const from = video.style.opacity === "" ? 0 : parseFloat(video.style.opacity);
+
+    const step = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration);
+      video.style.opacity = String(from + (target - from) * progress);
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(step);
+      } else {
+        rafRef.current = null;
+      }
+    };
+    rafRef.current = requestAnimationFrame(step);
+  }
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleLoadedData = () => {
+      video.style.opacity = "0";
+      video.play().catch(() => undefined);
+      fadeTo(1, FADE_MS);
+    };
+
+    const handleTimeUpdate = () => {
+      if (!fadingOutRef.current && video.duration - video.currentTime <= FADE_OUT_LEAD && video.duration - video.currentTime > 0) {
+        fadingOutRef.current = true;
+        fadeTo(0, FADE_MS);
+      }
+    };
+
+    const handleEnded = () => {
+      video.style.opacity = "0";
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      fadingOutRef.current = false;
+      setTimeout(() => {
+        video.currentTime = 0;
+        video.play().catch(() => undefined);
+        fadeTo(1, FADE_MS);
+      }, 100);
+    };
+
+    video.addEventListener("loadeddata", handleLoadedData);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("ended", handleEnded);
+
+    return () => {
+      video.removeEventListener("loadeddata", handleLoadedData);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("ended", handleEnded);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div className="relative min-h-screen selection:bg-surface-variant selection:text-white">
-      {/* Background Video */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none w-full h-full">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="object-cover w-full h-full opacity-60"
+    <video
+      ref={videoRef}
+      autoPlay
+      muted
+      playsInline
+      preload="auto"
+      src={src}
+      style={{ opacity: 0, ...style }}
+      className={className}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* BlurText — word-by-word blur-in                                    */
+/* ------------------------------------------------------------------ */
+function BlurText({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const inView = useInView(ref, { amount: 0.1 });
+  const words = text.split(" ");
+
+  return (
+    <p
+      ref={ref}
+      className={className ?? ""}
+      style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", rowGap: "0.1em" }}
+    >
+      {words.map((word, i) => (
+        <motion.span
+          key={i}
+          initial={{ filter: "blur(10px)", opacity: 0, y: 50 }}
+          animate={
+            inView
+              ? { filter: ["blur(10px)", "blur(5px)", "blur(0px)"], opacity: [0, 0.5, 1], y: [50, -5, 0] }
+              : { filter: "blur(10px)", opacity: 0, y: 50 }
+          }
+          transition={{ duration: 0.7, times: [0, 0.5, 1], ease: "easeOut", delay: delay + (i * 100) / 1000 }}
+          style={{ display: "inline-block", marginRight: "0.28em" }}
         >
-          <source
-            src="https://imagine-public.x.ai/imagine-public/share-videos/b0b3d2aa-2ae7-4a97-a28d-7477be0b8dd2.mp4"
-            type="video/mp4"
-          />
-        </video>
-        {/* Overlay to ensure text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-surface/40 via-surface/60 to-surface pointer-events-none" />
+          {word}
+        </motion.span>
+      ))}
+    </p>
+  );
+}
+
+/* Shared section reveal helper */
+function FadeIn({ children, className, delay = 0 }: { children: ReactNode; className?: string; delay?: number; key?: Key }) {
+  return (
+    <motion.div
+      initial={{ filter: "blur(10px)", opacity: 0, y: 20 }}
+      whileInView={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.8, delay, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Navbar (persistent)                                                 */
+/* ------------------------------------------------------------------ */
+function Navbar() {
+  return (
+    <nav className="fixed top-4 left-0 right-0 z-50 flex items-center justify-between px-8 lg:px-16">
+      <a href="#home" className="liquid-glass flex h-12 w-12 items-center justify-center rounded-full">
+        <span className="font-heading italic lowercase text-white">m</span>
+      </a>
+
+      <div className="liquid-glass hidden items-center gap-1.5 px-1.5 py-1.5 rounded-full md:flex">
+        {NAV_LINKS.map((link) => (
+          <a key={link.label} href={link.href} className="px-3 py-2 text-sm font-medium text-white/90 font-body">
+            {link.label}
+          </a>
+        ))}
+        <a
+          href="#booking"
+          className="flex items-center gap-1 whitespace-nowrap rounded-full bg-white px-4 py-2 text-sm font-medium text-black"
+        >
+          Book MinhNhat
+          <ArrowUpRight className="h-4 w-4" />
+        </a>
       </div>
 
-      {/* Navigation Bar */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-12 py-6 bg-surface/40 backdrop-blur-2xl border-b border-on-surface/5">
-        <div className="font-headline italic text-2xl tracking-tighter text-white">
-          MinhNhat.Art®
-        </div>
-        
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={(e) => {
-                if (link.href === "#music") {
-                  e.preventDefault();
-                  scrollToMusic();
-                }
-              }}
-              className={`text-xs uppercase tracking-[0.2em] transition-all duration-300 hover:text-white ${
-                link.active ? "text-white border-b border-white/40 pb-1" : "text-on-surface-variant"
-              }`}
-            >
-              {link.name}
-            </a>
-          ))}
-        </div>
+      <div className="h-12 w-12" />
+    </nav>
+  );
+}
 
-        <button className="liquid-glass px-6 py-2 rounded-full text-xs font-medium tracking-wide text-white hover:scale-95 transition-transform">
-          Let's go
-        </button>
-      </nav>
+/* ------------------------------------------------------------------ */
+/* Section 1 — Hero                                                    */
+/* ------------------------------------------------------------------ */
+function Hero() {
+  return (
+    <section id="home" className="relative h-screen w-full overflow-hidden bg-black">
+      <FadingVideo
+        src={heroVideo}
+        className="absolute left-1/2 top-0 z-0 -translate-x-1/2 object-cover object-top"
+        style={{ width: "120%", height: "120%" }}
+      />
 
-      {/* Hero Section */}
-      <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 text-center">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="max-w-5xl space-y-12"
-        >
-          <motion.h1 
-            variants={itemVariants}
-            className="font-headline text-6xl md:text-8xl lg:text-[120px] leading-[0.9] tracking-tight text-white"
+      <div className="relative z-10 flex h-full flex-col px-8 lg:px-16">
+        <Navbar />
+
+        <div className="flex flex-1 flex-col items-center justify-center pt-24 px-4 text-center">
+          <motion.div
+            initial={{ filter: "blur(10px)", opacity: 0, y: 20 }}
+            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+            className="liquid-glass flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-6"
           >
-            <span className="text-on-surface-variant font-light not-italic">Good Music</span>
-            <br />
-            Make <span className="italic font-light">Us Happy</span>
-          </motion.h1>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-black">Live</span>
+            <span className="text-sm text-white/90 pr-3">Born to mix. Built to move the floor.</span>
+          </motion.div>
 
-          <motion.p 
-            variants={itemVariants}
-            className="max-w-2xl mx-auto text-lg md:text-xl font-light leading-relaxed text-on-surface-variant"
+          <h1 className="mt-8">
+            <BlurText
+              text="Venture Past Your Sky Across the Soundscape"
+              className="text-6xl md:text-7xl lg:text-[5.5rem] font-heading italic text-white leading-[0.8] max-w-2xl tracking-[-4px]"
+            />
+          </h1>
+
+          <motion.p
+            initial={{ filter: "blur(10px)", opacity: 0, y: 20 }}
+            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
+            className="mt-4 text-sm md:text-base text-white max-w-2xl font-body font-light leading-tight"
           >
-            Let me show you a kind of energy you’ve never felt before.
+            MinhNhat is a DJ and producer riding genre fluid — techno, house and afro
+            grooves woven into sets that feel like synths floating through deep space.
+            Secure, extraordinary, and made to be felt.
           </motion.p>
 
-          <motion.div 
-            variants={itemVariants}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6"
-          >
-            <button 
-              onClick={scrollToMusic}
-              className="liquid-glass px-8 py-4 rounded-full flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-white group"
-            >
-              <PlayCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Listen My Music
-            </button>
-            <button className="liquid-glass px-8 py-4 rounded-full flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-white group">
-              <ArrowUpRight className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Work With Me
-            </button>
-          </motion.div>
-        </motion.div>
-      </main>
-
-      {/* Music Section */}
-      <section id="music" className="relative z-10 py-24 px-6 md:px-12 bg-surface/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            viewport={{ once: true }}
-            className="space-y-24"
+            initial={{ filter: "blur(10px)", opacity: 0, y: 20 }}
+            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.1, ease: "easeOut" }}
+            className="mt-6 flex items-center gap-6"
           >
-            <div className="text-center space-y-4">
-              <h2 className="font-headline text-4xl md:text-6xl text-white">The Sound Waves</h2>
-              <p className="text-on-surface-variant tracking-[0.2em] uppercase text-xs">Curated sets and remixes</p>
-            </div>
+            <a
+              href="#sound"
+              className="liquid-glass-strong flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white"
+            >
+              Drop Into the Sound
+              <ArrowUpRight className="h-5 w-5" />
+            </a>
+          </motion.div>
 
-            {/* Spotify Section */}
-            <div className="space-y-8">
-              <h3 className="font-headline text-2xl text-on-surface-variant italic border-l-2 border-white/20 pl-4">Hệ Spotify</h3>
-              <div className="liquid-glass p-4 rounded-2xl">
-                <iframe 
-                  style={{ borderRadius: '12px' }} 
-                  src="https://open.spotify.com/embed/artist/4fPZXnp7EAhGo95xr6ysJV?utm_source=generator" 
-                  width="100%" 
-                  height="352" 
-                  frameBorder="0" 
-                  allowFullScreen={true} 
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-                  loading="lazy"
-                ></iframe>
-              </div>
-            </div>
-
-            {/* SoundCloud Section */}
-            <div className="space-y-8">
-              <h3 className="font-headline text-2xl text-on-surface-variant italic border-l-2 border-white/20 pl-4">Hệ Soundcloud</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {[
-                  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A1374846166&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
-                  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2290266722&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true",
-                  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2266532570&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
-                  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A1616254599&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
-                  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A1606080858&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
-                  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A1129528636&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
-                  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A980746819&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
-                  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A762154690&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
-                  "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A645735228&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
-                ].map((src, idx) => (
-                  <div key={idx} className="liquid-glass p-2 rounded-xl overflow-hidden">
-                    <iframe 
-                      width="100%" 
-                      height={src.includes("2290266722") ? "166" : "300"} 
-                      scrolling="no" 
-                      frameBorder="no" 
-                      allow="autoplay" 
-                      src={src}
-                    ></iframe>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* YouTube Section */}
-            <div className="space-y-8">
-              <h3 className="font-headline text-2xl text-on-surface-variant italic border-l-2 border-white/20 pl-4">Hệ Youtube : Sản phẩm</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="liquid-glass p-1 rounded-2xl overflow-hidden aspect-video">
-                  <iframe 
-                    width="100%" 
-                    height="100%" 
-                    src="https://www.youtube.com/embed/vGC7OtcLop0?si=rZLdj7Dnr_8zkZXv" 
-                    title="YouTube video player" 
-                    frameBorder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                    referrerPolicy="strict-origin-when-cross-origin" 
-                    allowFullScreen={true}
-                  ></iframe>
-                </div>
-                <div className="liquid-glass p-1 rounded-2xl overflow-hidden aspect-video">
-                  <iframe 
-                    width="100%" 
-                    height="100%" 
-                    src="https://www.youtube.com/embed/YKFh1Gzd4iA?si=A81gtILNWt8fyx1k" 
-                    title="YouTube video player" 
-                    frameBorder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                    referrerPolicy="strict-origin-when-cross-origin" 
-                    allowFullScreen={true}
-                  ></iframe>
+          <motion.div
+            initial={{ filter: "blur(10px)", opacity: 0, y: 20 }}
+            animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.3, ease: "easeOut" }}
+            className="mt-8 grid w-full max-w-[692px] grid-cols-1 gap-4 sm:grid-cols-3"
+          >
+            {[
+              { icon: <ClockIcon className="h-7 w-7 text-white" />, value: "850+", label: "Live Sets Played" },
+              { icon: <Music className="h-7 w-7 text-white" />, value: "98+", label: "Songs Released" },
+              { icon: <GlobeIcon className="h-7 w-7 text-white" />, value: "8.7 Mil", label: "Views" },
+            ].map((stat) => (
+              <div key={stat.label} className="liquid-glass flex min-w-0 flex-col justify-between rounded-[1.25rem] p-5">
+                <div>{stat.icon}</div>
+                <div>
+                  <div className="mt-6 text-4xl font-heading italic text-white leading-none tracking-[-1px]">{stat.value}</div>
+                  <div className="mt-2 text-xs text-white font-body font-light">{stat.label}</div>
                 </div>
               </div>
-            </div>
+            ))}
           </motion.div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 flex flex-col md:flex-row items-center justify-between px-6 md:px-12 py-12 border-t border-on-surface/5 text-[10px] uppercase tracking-[0.3em] text-on-surface-variant">
-        <div>
-          © 2024 MINHNHAT.ART. THE NOCTURNAL CURATOR.
+        <motion.div
+          initial={{ filter: "blur(10px)", opacity: 0, y: 20 }}
+          animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.4, ease: "easeOut" }}
+          className="flex flex-col items-center gap-4 pb-8"
+        >
+          <div className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white">
+            Playing across the best venues and crews
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 md:gap-x-16">
+            {PARTNER_NAMES.map((name) => (
+              <span key={name} className="font-heading italic text-white text-2xl md:text-3xl tracking-tight">
+                {name}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Section 2 — Sound plugs (Spotify, remixes, beats)                   */
+/* ------------------------------------------------------------------ */
+function Sound() {
+  return (
+    <section id="sound" className="relative w-full bg-black py-24 px-8 md:px-16 lg:px-20">
+      <div className="mx-auto max-w-7xl">
+        <FadeIn>
+          <p className="mb-6 text-sm font-body text-white/80">// The Sound</p>
+          <h2 className="font-heading italic text-white text-6xl md:text-7xl lg:text-[5.5rem] leading-[0.9] tracking-[-3px]">
+            Pause, press, listen.
+            <br />
+            <span className="text-white/70">The catalogue.</span>
+          </h2>
+        </FadeIn>
+
+        {/* Latest set */}
+        <FadeIn delay={0.1} className="mt-16">
+          <div className="liquid-glass rounded-[1.25rem] p-4 md:p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <Youtube className="h-5 w-5 text-white" />
+              <h3 className="font-heading italic text-2xl text-white">Mới nhất — Latest Set</h3>
+            </div>
+            <div className="liquid-glass rounded-xl p-1 overflow-hidden aspect-video">
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/HeQkaLU3HEw"
+                title="MinhNhat latest set"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </FadeIn>
+
+        {/* Spotify — playlist embed */}
+        <FadeIn delay={0.1} className="mt-12">
+          <div className="liquid-glass rounded-[1.25rem] p-4 md:p-6">
+            <div className="mb-4 flex items-center gap-3">
+              <Music className="h-5 w-5 text-white" />
+              <h3 className="font-heading italic text-2xl text-white">Playlist — Spotify</h3>
+            </div>
+            <iframe
+              data-testid="embed-iframe"
+              style={{ borderRadius: "12px" }}
+              src="https://open.spotify.com/embed/playlist/1VQKoIPhICU5rkUq9ymSn3?utm_source=generator&theme=0&si=994f757b1b4143bf"
+              width="100%"
+              height="352"
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              title="Spotify playlist"
+            />
+          </div>
+        </FadeIn>
+
+        {/* Remixes */}
+        <FadeIn delay={0.1} className="mt-12">
+          <div className="mb-6 flex items-center gap-3">
+            <Clapperboard className="h-5 w-5 text-white" />
+            <h3 className="font-heading italic text-2xl md:text-3xl text-white">My remixes — SoundCloud</h3>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {REMIX_LINKS.map((src, idx) => (
+              <div key={idx} className="liquid-glass rounded-xl p-2 overflow-hidden">
+                <iframe
+                  width="100%"
+                  height="300"
+                  scrolling="no"
+                  frameBorder="no"
+                  allow="autoplay"
+                  loading="lazy"
+                  src={src}
+                  title={`MinhNhat remix ${idx + 1}`}
+                />
+              </div>
+            ))}
+          </div>
+        </FadeIn>
+
+        {/* Beats */}
+        <FadeIn delay={0.1} className="mt-12">
+          <div className="mb-6 flex items-center gap-3">
+            <Youtube className="h-5 w-5 text-white" />
+            <h3 className="font-heading italic text-2xl md:text-3xl text-white">YouTube — My beats</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {BEAT_LINKS.map((beat) => (
+              <div key={beat.src} className="liquid-glass rounded-2xl p-1 overflow-hidden aspect-video">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src={beat.src}
+                  title={beat.label}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            ))}
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Section 3 — Capabilities ("What I Do")                              */
+/* ------------------------------------------------------------------ */
+const CAPABILITIES = [
+  {
+    icon: <Lightbulb className="h-6 w-6 text-white" />,
+    title: "Smart Stage",
+    body: "Automatic lighting and material adjustment. Full-fidelity energy with real crowd reaction — engineered live from the booth to the floor.",
+  },
+];
+
+function Capabilities() {
+  return (
+    <section id="craft" className="relative min-h-screen w-full overflow-hidden bg-black">
+      <FadingVideo
+        src={capabilitiesVideo}
+        className="absolute inset-0 z-0 h-full w-full object-cover"
+        style={{ width: "100%", height: "100%" }}
+      />
+
+      <div className="relative z-10 flex min-h-screen flex-col px-8 pt-24 md:px-16 lg:px-20 pb-10">
+        <FadeIn className="mb-auto">
+          <p className="mb-6 text-sm font-body text-white/80">// What I Do</p>
+          <h2 className="font-heading italic text-white text-6xl md:text-7xl lg:text-[6rem] leading-[0.9] tracking-[-3px]">
+            Sound
+            <br />
+            evolved
+          </h2>
+        </FadeIn>
+
+        <div className="mt-16 grid grid-cols-1 gap-6 md:max-w-md">
+          {CAPABILITIES.map((cap, i) => (
+            <FadeIn key={cap.title} delay={i * 0.1}>
+              <div className="liquid-glass flex min-h-[360px] flex-col rounded-[1.25rem] p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="liquid-glass flex h-11 w-11 items-center justify-center rounded-[0.75rem]">{cap.icon}</div>
+
+                </div>
+                <div className="flex-1" />
+                <div className="mt-6">
+                  <h3 className="font-heading italic text-white text-3xl md:text-4xl tracking-[-1px] leading-none">{cap.title}</h3>
+                  <p className="mt-3 text-sm text-white/90 font-body font-light leading-snug max-w-[32ch]">{cap.body}</p>
+                </div>
+              </div>
+            </FadeIn>
+          ))}
         </div>
-        <div className="flex gap-8 mt-6 md:mt-0">
-          <a href="#" className="hover:text-white transition-colors">Privacy</a>
-          <a href="#" className="hover:text-white transition-colors">Terms</a>
-          <a href="#" className="hover:text-white transition-colors">Instagram</a>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Section 4 — The Vault (gallery)                                     */
+/* ------------------------------------------------------------------ */
+function VaultGallery() {
+  return (
+    <section id="gallery" className="relative w-full bg-black py-24 px-8 md:px-16 lg:px-20">
+      <div className="mx-auto max-w-[1180px]">
+        <FadeIn>
+          <p className="mb-6 text-sm font-body text-white/80">// The Vault</p>
+          <h2 className="font-heading italic text-white text-6xl md:text-7xl lg:text-[5.5rem] leading-[0.9] tracking-[-3px]">
+            Frames from the booth
+          </h2>
+          <p className="mt-4 max-w-2xl text-sm md:text-base text-white/70 font-body font-light leading-relaxed">
+            Full-frame moments from shows, studios and the floor — a visual board of
+            the nights and lights behind the music.
+          </p>
+        </FadeIn>
+
+        <div className="picture-masonry mt-16">
+          {pictureCards.map((picture, index) => (
+            <motion.article
+              key={picture.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.1 }}
+              transition={{ duration: 0.55, delay: index * 0.04 }}
+              className="picture-card picture-masonry-item group"
+            >
+              <div className="picture-frame">
+                <img src={picture.src} alt={picture.title} width={picture.width} height={picture.height} className="w-full h-auto block" loading="lazy" />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
+                <div className="glass-caption inline-flex items-center gap-3 rounded-full px-4 py-2 max-w-full">
+                  <span className="h-2 w-2 rounded-full bg-white/70 shrink-0" />
+                  <span className="truncate text-[10px] uppercase tracking-[0.28em] text-white/90">{picture.title}</span>
+                </div>
+              </div>
+            </motion.article>
+          ))}
         </div>
-      </footer>
-    </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Section 5 — Booking & socials                                       */
+/* ------------------------------------------------------------------ */
+function Booking() {
+  return (
+    <section id="booking" className="relative w-full bg-black py-24 px-8 md:px-16 lg:px-20">
+      <div className="mx-auto max-w-7xl">
+        <FadeIn className="space-y-8">
+          <div className="text-center space-y-4">
+            <p className="mb-4 text-sm font-body text-white/80">// Booking</p>
+            <h2 className="font-heading italic text-4xl md:text-6xl text-white">Work With Me</h2>
+            <p className="text-white/70 tracking-[0.2em] uppercase text-xs">Direct booking and contact</p>
+          </div>
+
+          <div className="liquid-glass rounded-[32px] p-6 md:p-10 overflow-hidden relative">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_30%)] pointer-events-none" />
+            <div className="relative grid gap-10 lg:grid-cols-[1.2fr_0.8fr] items-start">
+              <div className="space-y-6">
+                <h3 className="font-heading italic text-4xl md:text-5xl leading-tight text-white">
+                  Booking, collab, remix, build your music with me.
+                </h3>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <a href="mailto:minhnhatdichoi@gmail.com" className="glass-button rounded-2xl px-5 py-4 flex items-center gap-4 text-left">
+                    <span className="glass-icon">
+                      <Mail className="h-5 w-5" />
+                    </span>
+                    <span>
+                      <span className="block text-[10px] uppercase tracking-[0.3em] text-white/60">Email</span>
+                      <span className="block text-sm md:text-base text-white break-all">minhnhatdichoi@gmail.com</span>
+                    </span>
+                  </a>
+                  <a href="tel:+84914254667" className="glass-button rounded-2xl px-5 py-4 flex items-center gap-4 text-left">
+                    <span className="glass-icon">
+                      <Phone className="h-5 w-5" />
+                    </span>
+                    <span>
+                      <span className="block text-[10px] uppercase tracking-[0.3em] text-white/60">Call</span>
+                      <span className="block text-sm md:text-base text-white">+84 914254667</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {Object.entries({ Facebook: SOCIALS[0], Instagram: SOCIALS[1], TikTok: SOCIALS[2], Threads: SOCIALS[3] }).map(([key, social]) => {
+                  const Icon = SOCIAL_ICONS[key];
+                  return (
+                    <a
+                      key={key}
+                      href={social.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="glass-button rounded-2xl px-5 py-5 min-h-28 flex flex-col items-start justify-between"
+                    >
+                      <span className="glass-icon">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span>
+                        <span className="block text-[10px] uppercase tracking-[0.3em] text-white/60">{key}</span>
+                        <span className="mt-1 block text-sm text-white">Open Profile</span>
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Footer                                                              */
+/* ------------------------------------------------------------------ */
+function Footer() {
+  return (
+    <footer className="relative z-10 flex flex-col md:flex-row items-center justify-between px-6 md:px-16 py-12 border-t border-white/10 text-[10px] uppercase tracking-[0.3em] text-white/50">
+      <div>© 2024 DJMINHNHAT.ART — THE NOCTURNAL CURATOR.</div>
+      <div className="flex gap-8 mt-6 md:mt-0">
+        <a href="#home" className="hover:text-white transition-colors">Home</a>
+        <a href="#sound" className="hover:text-white transition-colors">Sound</a>
+        <a href="#gallery" className="hover:text-white transition-colors">Vault</a>
+        <a href="https://instagram.com/minhnhat.music" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
+          Instagram
+        </a>
+      </div>
+    </footer>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* App                                                                 */
+/* ------------------------------------------------------------------ */
+export default function App() {
+  return (
+    <main className="bg-black">
+      <Hero />
+      <Sound />
+      <Capabilities />
+      <VaultGallery />
+      <Booking />
+      <Footer />
+    </main>
   );
 }

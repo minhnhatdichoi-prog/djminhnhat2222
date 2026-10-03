@@ -6,3 +6,22 @@ coverage/
 *.log
 .env*
 !.env.example
+._*
+
+# Track only the media used on the website.
+/Minhnhat - the profile/**
+!/Minhnhat - the profile/01.mp4
+!/Minhnhat - the profile/Video/
+/Minhnhat - the profile/Video/*
+!/Minhnhat - the profile/Video/ok 02.mp4
+!/Minhnhat - the profile/MinhNhat Profile Picture/
+/Minhnhat - the profile/MinhNhat Profile Picture/*
+!/Minhnhat - the profile/MinhNhat Profile Picture/IMG_0286.JPG
+!/Minhnhat - the profile/MinhNhat Profile Picture/IMG_0289.JPG
+!/Minhnhat - the profile/MinhNhat Profile Picture/IMG_0290.JPG
+!/Minhnhat - the profile/MinhNhat Profile Picture/IMG_5501.JPG
+/Vault 2/*
+!/Vault 2/14.06 HansMedia_KalaKalaEDM (133).jpg
+!/Vault 2/ChatGPT Image Sep 17, 2026, 04_25_38 PM.png
+!/Vault 2/482242610_2000747133752439_6881298387076109_n.jpg
+!/Vault 2/483528132_2002020566958429_5578150164988324061_n.jpg
