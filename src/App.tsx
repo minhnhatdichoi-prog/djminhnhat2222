@@ -24,7 +24,7 @@ import {
 /* Local assets                                                        */
 /* ------------------------------------------------------------------ */
 import heroVideo from "../Minhnhat - the profile/01.mp4";
-import capabilitiesVideo from "../Minhnhat - the profile/Video/ok 02.mp4";
+const capabilitiesVideo = "/minhnhat-stage.mp4";
 
 const pictureModules = import.meta.glob(
   [
